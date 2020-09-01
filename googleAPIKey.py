@@ -1,9 +1,10 @@
 import googlemaps
 from datetime import datetime
-import googlemaps
-from datetime import datetime
+from datetime import timedelta
 import csv
 import numpy as np
+from string import ascii_lowercase
+
 class googleAPI:
 	def __init__(self,keyFile,addressesCSV):
 		self.unlockGoogleAPI(keyFile)
@@ -24,7 +25,8 @@ class googleAPI:
 			f.close()
 			self.gmaps = googlemaps.Client(key=googleKey)
 		except:
-			print('read {} from {} \nand it was not a valid key.'.format(googleKey,googleKeyFile))
+			print('read {} from {} \n'
+			+'and it was not a valid key.'.format(googleKey,googleKeyFile))
 		finally:
 			return self
 		
@@ -53,6 +55,7 @@ class googleAPI:
 		if len(self.addresses) == 0:
 			print('no addresses list loaded')
 		else:
+			self.gmaps.geocode(self.addresses[0])
 			self.locations = [self.gmaps.geocode(address) for address in self.addresses]
 		return self
 	
@@ -68,27 +71,57 @@ class googleAPI:
 		return self
 		
 	def createTimeMatrix(self):
+		#will come back to later
 		mat = np.zeros([len(self.locations),len(self.locations)])
-
+		return self
+	
+	def testSolutionStability(self,deltaMins):
+		codings = []
+		cashe = ''
+		time = self.departureTime
+		delta = timedelta(minutes=deltaMins)
+		self.orderings = []
+		first = True
+		for i in range(23):
+			time = time + delta
+			optimized_ordering = self.gmaps.directions(
+				self.latLongs[0],
+				self.latLongs[0],
+				departure_time=time,
+				optimize_waypoints=True,
+				waypoints=self.latLongs[1:])[0]['waypoint_order']
+			coding = ''
+			for index in range(len(optimized_ordering)):
+				coding = coding + ascii_lowercase[index]*optimized_ordering[index]
+			codings.append(coding)
+			if cashe != coding:
+				if not first:
+					print('cashe updated from {} to {}'.format(cashe,coding))
+				else:
+					first = False
+				cashe = coding
+				self.orderings.append(optimized_ordering)
+				
+				
+		uniqueCodes = set(codings)
+		if len(list(uniqueCodes)) == 1:
+			print('this is likely the best route regardless of traffic')
+		else:
+			print('departure time matters...')
+		return self
 
 if __name__ == "__main__":
 	keyFile = 'googleAPIKey.txt'
 	addressesCSV = 'sampleAddresses.txt'
 	gAPI = googleAPI(keyFile,addressesCSV)
-	locs = gAPI.latLongs
-	now = datetime.now()
-	datetime_str = '09/19/20 13:55:26'
-
-	datetime_object = datetime.strptime(datetime_str, '%m/%d/%y %H:%M:%S')
-	#print(datetime_object)
-	#print(gAPI.addresses[0])
-	optimized_ordering = gAPI.gmaps.directions(locs[0],locs[0],departure_time=now,optimize_waypoints=True,waypoints=locs[1:])[0]['waypoint_order']
-	print(optimized_ordering)
-	print([gAPI.addresses[1+item] for item in optimized_ordering])
-
+	gAPI.testSolutionStability(45)
+	print([ordering for ordering in gAPI.orderings])
+	iter = 0
+	for elem in gAPI.orderings:
+		print('option {}\n'.format(iter))
+		for i in elem:
+			print(gAPI.addresses[i])
+		print('\n\n')
 	
-	#keys = list(locs[0][0].keys())
-	#print(keys[2])
-	#print(locs[1][0]['geometry']['location']['lat'])
-
+		
 
