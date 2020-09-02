@@ -127,6 +127,7 @@ if __name__ == "__main__":
 			for i in elem:
 				print(gAPI.addresses[i])
 			print('\n\n')
+			iter = iter + 1
 	except:
 		keyFile = input("File with google Key in it: ")
 		addressesCSV = input("File with addresses in it: ")
