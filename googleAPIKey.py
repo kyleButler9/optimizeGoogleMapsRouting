@@ -13,7 +13,6 @@ class googleAPI:
 		self.latLongs = []
 		self.departureTimes = []
 		self.stayDuration = []
-		self.departureTime = 0
 		self.readCSV(addressesCSV)
 		self.geocodeAddresses()
 		self.apiLocationsToLatLongs()
@@ -42,8 +41,15 @@ class googleAPI:
 					self.addresses.append(', '.join(row[:-1]))
 					if firstIter == True:
 						#example proper format: '09/19/20 13:55:26'
-						self.departureTime = datetime.strptime(row[-1], '%m/%d/%y %H:%M:%S')
-						firstIter = False
+						print('Unless you\'re excused below, you messed up the departure date/time in the addresses csv.')
+						print("departure time is: ",row[-1])
+						try:
+							self.departureTime = datetime.strptime(row[-1], '%m/%d/%y %H:%M:%S')
+						except:
+							self.departureTime = datetime.strptime(row[-1], ' %m/%d/%y %H:%M:%S')
+						finally:
+							firstIter = False
+							print('you did the date/time right! no worries your\'re excused.')
 					else:
 						self.stayDuration.append(row[-1])
 		except:
@@ -111,17 +117,31 @@ class googleAPI:
 		return self
 
 if __name__ == "__main__":
-	keyFile = 'googleAPIKey.txt'
-	addressesCSV = 'sampleAddresses.txt'
-	gAPI = googleAPI(keyFile,addressesCSV)
-	gAPI.testSolutionStability(45)
-	print([ordering for ordering in gAPI.orderings])
-	iter = 0
-	for elem in gAPI.orderings:
-		print('option {}\n'.format(iter))
-		for i in elem:
-			print(gAPI.addresses[i])
-		print('\n\n')
+	try:
+		keyFile = 'googleAPIKey.txt'
+		addressesCSV = 'sampleAddresses.csv'
+		gAPI = googleAPI(keyFile,addressesCSV)
+		gAPI.testSolutionStability(45)
+		#print([ordering for ordering in gAPI.orderings])
+		iter = 0
+		for elem in gAPI.orderings:
+			print('option {}\n'.format(iter))
+			for i in elem:
+				print(gAPI.addresses[i])
+			print('\n\n')
+	except:
+		keyFile = input("File with google Key in it: ")
+		addressesCSV = input("File with addresses in it: ")
+		gAPI = googleAPI(keyFile,addressesCSV)
+		gAPI.testSolutionStability(45)
+		#print([ordering for ordering in gAPI.orderings])
+		iter = 0
+		for elem in gAPI.orderings:
+			print('option {}\n'.format(iter))
+			for i in elem:
+				print(gAPI.addresses[i])
+			print('\n\n')
+	terminate = input("press enter to close.")
 	
 		
 
