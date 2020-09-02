@@ -16,7 +16,6 @@ class googleAPI:
 		self.readCSV(addressesCSV)
 		self.geocodeAddresses()
 		self.apiLocationsToLatLongs()
-		
 	def unlockGoogleAPI(self,googleKeyFile):
 		try:
 			f = open(googleKeyFile)
@@ -75,7 +74,10 @@ class googleAPI:
 				locs[0]['geometry']['location']['lng']
 			) for locs in self.locations]
 		return self
-		
+
+class optimizeRoute(googleAPI):
+	def __init__(self,keyFile,addressesCSV):
+		googleAPI.__init__(self,keyFile,addressesCSV)
 	def createTimeMatrix(self):
 		#will come back to later
 		mat = np.zeros([len(self.locations),len(self.locations)])
@@ -96,9 +98,7 @@ class googleAPI:
 				departure_time=time,
 				optimize_waypoints=True,
 				waypoints=self.latLongs[1:])[0]['waypoint_order']
-			coding = ''
-			for index in range(len(optimized_ordering)):
-				coding = coding + ascii_lowercase[index]*optimized_ordering[index]
+			coding = str(optimized_ordering)
 			codings.append(coding)
 			if cashe != coding:
 				if not first:
@@ -106,21 +106,19 @@ class googleAPI:
 				else:
 					first = False
 				cashe = coding
-				self.orderings.append(optimized_ordering)
-				
-				
+				self.orderings.append(optimized_ordering)	
 		uniqueCodes = set(codings)
 		if len(list(uniqueCodes)) == 1:
 			print('this is likely the best route regardless of traffic')
 		else:
-			print('departure time matters...')
+			print('unfortunately, departure time matters...')
 		return self
 
 if __name__ == "__main__":
 	try:
 		keyFile = 'googleAPIKey.txt'
 		addressesCSV = 'sampleAddresses.csv'
-		gAPI = googleAPI(keyFile,addressesCSV)
+		gAPI = optimizeRoute(keyFile,addressesCSV)
 		gAPI.testSolutionStability(45)
 		#print([ordering for ordering in gAPI.orderings])
 		iter = 0
@@ -132,7 +130,7 @@ if __name__ == "__main__":
 	except:
 		keyFile = input("File with google Key in it: ")
 		addressesCSV = input("File with addresses in it: ")
-		gAPI = googleAPI(keyFile,addressesCSV)
+		gAPI = optimizeRoute(keyFile,addressesCSV)
 		gAPI.testSolutionStability(45)
 		#print([ordering for ordering in gAPI.orderings])
 		iter = 0
@@ -142,6 +140,3 @@ if __name__ == "__main__":
 				print(gAPI.addresses[i])
 			print('\n\n')
 	terminate = input("press enter to close.")
-	
-		
-
